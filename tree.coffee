@@ -30,28 +30,30 @@ class Tree
     b[k]
 
 trees = (Ts...) ->
+  T = (i) ->
+    Ts[i] or _.last(Ts)
 
   anyLeaves = (ts) ->
     _.any ts, (t, i) ->
-      Ts[i].isLeaf(t)
+      T(i).isLeaf(t)
 
   keys = (ts) ->
     _(ts)
       .map (t, i) ->
-        Ts[i].keys(t)
+        T(i).keys(t)
       .flatten()
       .uniq()
       .value()
 
   branches = (ts, k) ->
     _.map ts, (t, i) ->
-      Ts[i].get(t, k)
+      T(i).get(t, k)
 
   branch = (ts) ->
-    Ts[0].branch(ts[0])
+    T(0).branch(ts[0])
 
   empty = (v) ->
-    Ts[0].empty(v)
+    T(0).empty(v)
 
   map = (ts..., fn, k) ->
     if anyLeaves(ts)
@@ -72,6 +74,7 @@ trees = (Ts...) ->
 
   map: (ts..., fn) ->
     r unless empty(r = map ts..., fn, undefined)
+
   reduce: (m, ts..., fn) ->
     reduce(m, ts..., fn, undefined)
 
@@ -83,4 +86,3 @@ console.log trees(Tree, Tree).map t0, t1, (l0, l1, k) ->
 console.log trees(Tree, Tree).reduce false, t0, t1, (m, l0, l1, k) ->
   # console.log m, l0, l1, k
   !!(l0 and l1)
-

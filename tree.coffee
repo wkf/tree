@@ -1,33 +1,40 @@
-_ = require '../SavantESM/node_modules/lodash'
+_ = require 'lodash'
+
 t0 = a: 1, b: [1,2,3,4]
 t1 = a: 2, b: {c: 1}
 
 class Tree
   @isLeaf: (b) ->
-    typeof b isnt 'object'
+    not _.isObject(b)
 
   @keys: (b) ->
-    if b instanceof Array
+    if _.isArray(b)
       [0...b.length]
-    else if b instanceof Object
+    else if _.isObject(b)
       Object.keys(b)
 
   @branch: (b) ->
-    if b instanceof Array
+    if _.isArray(b)
       []
-    else if b instanceof Object
+    else if _.isObject(b)
       {}
 
   @empty: (b) ->
-    if b instanceof Array
-      !b.length
-    else if b instanceof Object
+    if _.isArray(b)
+      false
+    else if _.isObject(b)
       !Object.keys(b).length
-    else if typeof b is 'undefined'
-      true
+    else
+      _.isUndefined(b)
 
   @get: (b, k) ->
     b[k]
+
+  @set: (b, k, v) ->
+    return b if _.isArray(b) and not _.isNumber(k)
+
+    b[k] = v unless @empty(v)
+    b
 
 trees = (Ts...) ->
   T = (i) ->
@@ -55,22 +62,25 @@ trees = (Ts...) ->
   empty = (v) ->
     T(0).empty(v)
 
+  mapper_ = (ts, fn) ->
+    (b, k) ->
+      T(0).set(b, k, map branches(ts, k)..., fn, k)
+
+  reducer_ = (ts, fn) ->
+    (m, k) ->
+      reduce m, branches(ts, k)..., fn, k
+
   map = (ts..., fn, k) ->
     if anyLeaves(ts)
       fn ts..., k
     else
-      _.reduce keys(ts), ((b, k) ->
-        b[k] = r unless empty(r = map branches(ts, k)..., fn, k)
-        b
-      ), branch(ts)
+      _.reduce keys(ts), mapper_(ts, fn), branch(ts)
 
   reduce = (m, ts..., fn, k) ->
     if anyLeaves(ts)
       fn m, ts..., k
     else
-      _.reduce keys(ts), ((m, k) ->
-        reduce m, branches(ts, k)..., fn, k
-      ), m
+      _.reduce keys(ts), reducer_(ts, fn), m
 
   map: (ts..., fn) ->
     r unless empty(r = map ts..., fn, undefined)
@@ -81,8 +91,30 @@ trees = (Ts...) ->
 console.log trees(Tree, Tree).map t0, t1, (l0, l1, k) ->
   # console.log l0, l1, k
   # l1 if l0
-  l0
+  l1
 
 console.log trees(Tree, Tree).reduce false, t0, t1, (m, l0, l1, k) ->
   # console.log m, l0, l1, k
   !!(l0 and l1)
+
+# Trees.type(Schema, Resource).reduce false, schema, resource, (valid, schemaNode, resourceNode, key) ->
+
+# Walk(schema, resource).as(Schema, Resource).reduce true, (v, sN, rN, k) ->
+# w = Walk.as(Schema, Resource)
+# W(schema, resource).reduce true
+
+# (schema, resource)
+
+# _.all ps, Project.isValid
+
+# _(ps)
+#   .map Project.parse
+#   .test ->
+#     if @all Project.valid
+#       @map (p) ->
+#         p.name
+#     else
+#       []
+#   .value()
+
+# _.map ps, Project.parse

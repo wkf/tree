@@ -1,0 +1,17 @@
+{
+  "name": "tree",
+  "description": "trees",
+  "author": "William K Farrell",
+  "version": "0.0.1",
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wkf/tree.git"
+  },
+  "dependencies": {
+    "lodash": "~2.2.1"
+  }
+}
